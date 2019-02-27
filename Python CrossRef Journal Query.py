@@ -79,7 +79,72 @@ def wikitable(df):
   # Return: An url showing that everything is neat and tidy!
 
 ##########################################################################################
+# Look at "Sample Code" "edit.py" for more information. It's very well-written
+# https://www.mediawiki.org/wiki/API:Edit#API_documentation
+
+def add_to_bobohome(page_name, new_section, section_title, text):
+    import requests
+    S = requests.Session()
+    URL = "http://bobo.home/w/api.php"
+    section = 'new'
+    if new_section != 1:
+        section = 0
+    
+    # (1/4) Retrieve login token first
+    PARAMS_1 = {
+    'action':"query",
+    'meta':"tokens",
+    'type':"login",
+    'format':"json"
+    }
+
+    R = S.get(url=URL, params=PARAMS_1)
+    DATA = R.json()
+    LOGIN_TOKEN = DATA['query']['tokens']['logintoken']
+    #print(LOGIN_TOKEN)
+
+    # Send a post request to login. Using the main account for login is not
+    # supported. Obtain credentials via Special:BotPasswords
+    # (https://www.mediawiki.org/wiki/Special:BotPasswords) for lgname & lgpassword
+    
+    lgname = input("Please enter your username: ") 
+    lgpassword = input("Please enter your password: ")
+    
+    PARAMS_2 = {
+        'action':"login",
+        'lgname':lgname,
+        'lgpassword':lgpassword,
+        'lgtoken':LOGIN_TOKEN,
+        'format':"json"
+    }
+    
+    R = S.post(URL, data=PARAMS_2)
+    
+    # Step 3: While logged in, retrieve a CSRF token
+    PARAMS_3 = {
+        "action": "query",
+        "meta": "tokens",
+        "format": "json"
+    }
+    
+    R = S.get(url=URL, params=PARAMS_3)
+    DATA = R.json()
+    CSRF_TOKEN = DATA["query"]["tokens"]["csrftoken"]
+
+    # Step 4: Edit
+    PARAMS_4 = {
+      'action' : 'edit',
+      'title' : page_name,
+      'section': section,
+      'sectiontitle': section_title,
+      'prependtext': text + '<br>',
+      'token' : CSRF_TOKEN
+    }
+    
+    R = S.post(URL, data=PARAMS_4)
+    #DATA = R.json()
+    #print(DATA)
+    return
 
 
-
-
+    
